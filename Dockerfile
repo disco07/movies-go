@@ -7,5 +7,5 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o build/movies-go g
 
 FROM scratch
 COPY --from=builder /go/src/github.com/disco07/movies-go/ /usr/bin/movies-go
-EXPOSE 4001
+EXPOSE 4001 4001
 ENTRYPOINT ["/usr/bin/movies-go"]

@@ -9,6 +9,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    networks:
+      - golang-postgres
+    ports:
+      - "4001:4001"
 
   postgres:
     image: postgres
