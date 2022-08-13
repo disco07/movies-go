@@ -1,11 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"time"
 )
 
 type config struct {
@@ -13,7 +14,7 @@ type config struct {
 	env  string
 }
 
-type app struct {
+type apps struct {
 	config config
 	logger *log.Logger
 }
@@ -21,31 +22,27 @@ type app struct {
 func main() {
 	var cfg config
 
-	flag.IntVar(&cfg.port, "port", 4000, "Server port to listen on")
+	flag.IntVar(&cfg.port, "port", 4001, "Server port to listen on")
 	flag.StringVar(&cfg.env, "env", "dev", "Application environment (dev|prod)")
 	flag.Parse()
 
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+
+	app := &apps{config: cfg, logger: logger}
+
 	fmt.Println("App's running")
 
-	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		currentStatus := struct {
-			Status string `json:"status"`
-			Env    string `json:"env"`
-		}{
-			Status: "Availanble",
-			Env:    cfg.env,
-		}
+	svr := &http.Server{
+		Addr:         fmt.Sprintf(":%d", cfg.port),
+		Handler:      app.routes(),
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	}
 
-		js, err := json.Marshal(currentStatus)
-		if err != nil {
-			log.Fatal(err)
-		}
-		w.Write(js)
-	})
+	logger.Println("Starting server on port", cfg.port)
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.port), nil); err != nil {
+	if err := svr.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }
