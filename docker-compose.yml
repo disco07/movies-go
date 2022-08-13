@@ -5,6 +5,11 @@ networks:
 
 services:
 
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
   postgres:
     image: postgres
     container_name: postgres-container
