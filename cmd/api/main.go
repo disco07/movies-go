@@ -36,6 +36,12 @@ func main() {
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
+	db, err := openDB(cfg)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	defer db.Close()
+
 	app := &apps{config: cfg, logger: logger}
 
 	fmt.Println("App's running")
