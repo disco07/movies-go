@@ -14,7 +14,7 @@ func (app apps) writeJSON(w http.ResponseWriter, status int, data interface{}, w
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
 	w.Write(js)
 
 	return nil

@@ -30,10 +30,7 @@ func (app apps) getOneMovie(w http.ResponseWriter, r *http.Request) {
 		CreatedAt:   time.Now(),
 		UpdateAt:    time.Now(),
 	}
-	err = app.writeJSON(w, http.StatusOK, movie, "movie")
-	if err != nil {
-		app.logger.Fatal(err)
-	}
+	app.writeJSON(w, http.StatusOK, movie, "movie")
 }
 
 func (app apps) getAllMovies(w http.ResponseWriter, r *http.Request) {
