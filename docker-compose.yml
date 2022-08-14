@@ -30,6 +30,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-moviego}
     volumes:
       - db-data:/var/lib/postgresql/data:rw
+      - ./db:/docker-entrypoint-initdb.d/
     networks:
       - golang-postgres
 

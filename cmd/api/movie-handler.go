@@ -3,10 +3,8 @@ package main
 import (
 	"errors"
 	"github.com/julienschmidt/httprouter"
-	"github/disco07/movies-go/models"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 func (app apps) getOneMovie(w http.ResponseWriter, r *http.Request) {
@@ -18,18 +16,12 @@ func (app apps) getOneMovie(w http.ResponseWriter, r *http.Request) {
 		app.errorJSON(w, err)
 		return
 	}
-	movie := models.Movie{
-		ID:          id,
-		Title:       "Some movie",
-		Description: "Some description",
-		Year:        2022,
-		ReleaseDate: time.Date(2022, 01, 01, 22, 25, 00, 00, time.Local),
-		Runtime:     100,
-		Rating:      5,
-		MPAARating:  "PG-13",
-		CreatedAt:   time.Now(),
-		UpdateAt:    time.Now(),
+
+	movie, err := app.models.DB.Find(id)
+	if err != nil {
+		app.logger.Fatal(err)
 	}
+
 	app.writeJSON(w, http.StatusOK, movie, "movie")
 }
 
