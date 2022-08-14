@@ -1,11 +1,11 @@
 FROM golang:1.18 AS builder
-COPY go.mod go.sum /go/src/github.com/disco07/movies-go/
-WORKDIR /go/src/github.com/disco07/movies-go/
+WORKDIR /movies-go
+COPY go.mod go.sum ./
 RUN go mod download
-COPY . /go/src/github.com/disco07/movies-go/
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o build/movies-go github.com/disco07/movies-go
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o movies-go ./cmd/api
 
 FROM scratch
-COPY --from=builder /go/src/github.com/disco07/movies-go/ /usr/bin/movies-go
-EXPOSE 4001 4001
+COPY --from=builder ./movies-go/movies-go /usr/bin/movies-go
+EXPOSE 4001
 ENTRYPOINT ["/usr/bin/movies-go"]

@@ -9,6 +9,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: go-container
     depends_on:
       - postgres
     networks:
