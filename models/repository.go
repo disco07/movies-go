@@ -10,7 +10,7 @@ type Repository struct {
 	DB *sql.DB
 }
 
-func (repo *Repository) Find(id int) (*Movie, error) {
+func (repo *Repository) FindMovie(id int) (*Movie, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -48,7 +48,35 @@ func (repo *Repository) Find(id int) (*Movie, error) {
 	return &movie, nil
 }
 
-func (repo *Repository) FindAll() ([]*Movie, error) {
+func (repo *Repository) FindMovieByGenre(genre string) ([]*Movie, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `SELECT m.id, title, m.description, m.year, m.release_date, m.runtime, m.rating, m.mpaa_rating 
+		FROM movies m INNER JOIN movies_genres mg ON m.id = mg.movie_id INNER JOIN genres g 
+        ON g.id = mg.genre_id WHERE g.genre_name = $1`
+
+	rows, err := repo.DB.QueryContext(ctx, query, genre)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var movies []*Movie
+
+	for rows.Next() {
+		var m Movie
+		err = rows.Scan(&m.ID, &m.Title, &m.Description, &m.Year, &m.ReleaseDate, &m.Runtime, &m.Rating, &m.MPAARating)
+		if err != nil {
+			return nil, err
+		}
+		movies = append(movies, &m)
+	}
+
+	return movies, nil
+}
+
+func (repo *Repository) FindMovieAll() ([]*Movie, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -94,4 +122,31 @@ func (repo *Repository) FindAll() ([]*Movie, error) {
 	}
 
 	return movies, nil
+}
+
+func (repo *Repository) FindGenresAll() ([]*Genre, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `SELECT id, genre_name
+			FROM genres ORDER BY genre_name`
+	rows, err := repo.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var genres []*Genre
+
+	for rows.Next() {
+		var g Genre
+		err = rows.Scan(&g.ID, &g.GenreName)
+		if err != nil {
+			return nil, err
+		}
+
+		genres = append(genres, &g)
+	}
+
+	return genres, nil
 }

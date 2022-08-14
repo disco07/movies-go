@@ -17,7 +17,7 @@ func (app apps) getOneMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	movie, err := app.models.DB.Find(id)
+	movie, err := app.models.DB.FindMovie(id)
 	if err != nil {
 		app.logger.Fatal(err)
 	}
@@ -29,8 +29,8 @@ func (app apps) getOneMovie(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app apps) getAllMovies(w http.ResponseWriter, r *http.Request) {
-	movies, err := app.models.DB.FindAll()
+func (app apps) getAllMovies(w http.ResponseWriter, _ *http.Request) {
+	movies, err := app.models.DB.FindMovieAll()
 	if err != nil {
 		app.errorJSON(w, err)
 		return
@@ -56,4 +56,32 @@ func (app apps) deleteMovie(w http.ResponseWriter, r *http.Request) {
 
 func (app apps) searchMovie(w http.ResponseWriter, r *http.Request) {
 
+}
+
+func (app apps) getAllGenres(w http.ResponseWriter, _ *http.Request) {
+	genres, err := app.models.DB.FindGenresAll()
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+	err = app.writeJSON(w, http.StatusOK, genres, "genres")
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+}
+
+func (app apps) getMovieByGenre(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	genre := params.ByName("genre")
+	movies, err := app.models.DB.FindMovieByGenre(genre)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+	err = app.writeJSON(w, http.StatusOK, movies, "movies")
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
 }
