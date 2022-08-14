@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -127,4 +128,24 @@ func (repo *Repository) FindGenresAll() ([]*Genre, error) {
 	}
 
 	return genres, nil
+}
+
+func (repo *Repository) InsertMovie(m Movie) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `INSERT INTO movies(title, description, year, release_date, runtime, rating, mpaa_rating) VALUES($1, $2, $3, $4, $5, $6, $7)`
+	stmt, err := repo.DB.PrepareContext(ctx, query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = repo.DB.ExecContext(ctx, query, m.Title, m.Description, m.Year, m.ReleaseDate, m.Runtime, m.Rating, m.MPAARating)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	return nil
 }

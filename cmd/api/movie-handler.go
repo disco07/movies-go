@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/julienschmidt/httprouter"
+	"github/disco07/movies-go/models"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -43,6 +46,20 @@ func (app apps) getAllMovies(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (app apps) insertMovie(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var movie models.Movie
+	if err := json.NewDecoder(r.Body).Decode(&movie); err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	err := app.models.DB.InsertMovie(movie)
+	if err != nil {
+		log.Fatal(err)
+		app.errorJSON(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
 
 }
 
