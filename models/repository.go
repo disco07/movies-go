@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"database/sql"
-	"log"
 	"time"
 )
 
@@ -29,19 +28,19 @@ func (repo *Repository) Find(id int) (*Movie, error) {
 		FROM movies_genres mg LEFT JOIN genres g ON g.id = mg.genre_id WHERE mg.movie_id = $1`
 	rows, err := repo.DB.QueryContext(ctx, query, id)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer rows.Close()
 
-	var mgs []MovieGenre
+	mgs := make(map[int]string)
 
 	for rows.Next() {
 		var mg MovieGenre
 		err = rows.Scan(&mg.ID, &mg.MovieID, &mg.GenreID, &mg.CreatedAt, &mg.UpdateAt, &mg.Genre.GenreName)
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
-		mgs = append(mgs, mg)
+		mgs[mg.ID] = mg.Genre.GenreName
 	}
 
 	movie.MovieGenre = mgs
@@ -50,5 +49,49 @@ func (repo *Repository) Find(id int) (*Movie, error) {
 }
 
 func (repo *Repository) FindAll() ([]*Movie, error) {
-	return nil, nil
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `SELECT id, title, description, year, release_date, runtime, rating, mpaa_rating
+			FROM movies ORDER BY title`
+	rows, err := repo.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var movies []*Movie
+
+	for rows.Next() {
+		var movie Movie
+		err = rows.Scan(&movie.ID, &movie.Title, &movie.Description, &movie.Year, &movie.ReleaseDate, &movie.Runtime, &movie.Rating, &movie.MPAARating)
+		if err != nil {
+			return nil, err
+		}
+
+		query = `SELECT mg.id, mg.movie_id, mg.genre_id, mg.created_at, mg.updated_at, g.genre_name 
+		FROM movies_genres mg LEFT JOIN genres g ON g.id = mg.genre_id WHERE mg.movie_id = $1`
+		genreRows, err := repo.DB.QueryContext(ctx, query, movie.ID)
+		if err != nil {
+			return nil, err
+		}
+		defer genreRows.Close()
+
+		mgs := make(map[int]string)
+
+		for genreRows.Next() {
+			var mg MovieGenre
+			err = genreRows.Scan(&mg.ID, &mg.MovieID, &mg.GenreID, &mg.CreatedAt, &mg.UpdateAt, &mg.Genre.GenreName)
+			if err != nil {
+				return nil, err
+			}
+			mgs[mg.ID] = mg.Genre.GenreName
+		}
+
+		movie.MovieGenre = mgs
+
+		movies = append(movies, &movie)
+	}
+
+	return movies, nil
 }
