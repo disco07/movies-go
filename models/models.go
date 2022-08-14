@@ -1,6 +1,19 @@
 package models
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
+
+type Models struct {
+	DB Repository
+}
+
+func NewModels(db *sql.DB) Models {
+	return Models{
+		DB: Repository{db},
+	}
+}
 
 type Movie struct {
 	ID          int          `json:"id"`

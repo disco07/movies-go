@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"github/disco07/movies-go/models"
 	"log"
 	"net/http"
 	"os"
@@ -24,6 +25,7 @@ type config struct {
 type apps struct {
 	config config
 	logger *log.Logger
+	models models.Models
 }
 
 func main() {
@@ -31,7 +33,7 @@ func main() {
 
 	flag.IntVar(&cfg.port, "port", 4001, "Server port to listen on")
 	flag.StringVar(&cfg.env, "env", "dev", "Application environment (dev|prod)")
-	flag.StringVar(&cfg.db.dsn, "dsn", "postgres://tcs@localhost/moviego?sslmode=disable", "Postgres connection string")
+	flag.StringVar(&cfg.db.dsn, "dsn", "postgres://moviego:moviego@localhost/moviego?sslmode=disable", "Postgres connection string")
 	flag.Parse()
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
@@ -42,13 +44,13 @@ func main() {
 	}
 	defer db.Close()
 
-	app := &apps{config: cfg, logger: logger}
+	app := &apps{config: cfg, logger: logger, models: models.NewModels(db)}
 
 	fmt.Println("App's running")
 
 	svr := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.port),
-		Handler:      app.routes(),
+		Handler:      app.initializeRoutes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
