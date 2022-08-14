@@ -22,15 +22,38 @@ func (app apps) getOneMovie(w http.ResponseWriter, r *http.Request) {
 		app.logger.Fatal(err)
 	}
 
-	app.writeJSON(w, http.StatusOK, movie, "movie")
+	err = app.writeJSON(w, http.StatusOK, movie, "movie")
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
 }
 
 func (app apps) getAllMovies(w http.ResponseWriter, r *http.Request) {
 	movies, err := app.models.DB.FindAll()
 	if err != nil {
-		app.logger.Fatal(err)
 		app.errorJSON(w, err)
 		return
 	}
-	app.writeJSON(w, http.StatusOK, movies, "movies")
+	err = app.writeJSON(w, http.StatusOK, movies, "movies")
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+}
+
+func (app apps) insertMovie(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (app apps) updateMovie(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (app apps) deleteMovie(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (app apps) searchMovie(w http.ResponseWriter, r *http.Request) {
+
 }
