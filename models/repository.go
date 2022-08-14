@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 )
 
@@ -48,40 +49,17 @@ func (repo *Repository) FindMovie(id int) (*Movie, error) {
 	return &movie, nil
 }
 
-func (repo *Repository) FindMovieByGenre(genre string) ([]*Movie, error) {
+func (repo *Repository) FindMovieAll(genreId ...int) ([]*Movie, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT m.id, title, m.description, m.year, m.release_date, m.runtime, m.rating, m.mpaa_rating 
-		FROM movies m INNER JOIN movies_genres mg ON m.id = mg.movie_id INNER JOIN genres g 
-        ON g.id = mg.genre_id WHERE g.genre_name = $1`
-
-	rows, err := repo.DB.QueryContext(ctx, query, genre)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var movies []*Movie
-
-	for rows.Next() {
-		var m Movie
-		err = rows.Scan(&m.ID, &m.Title, &m.Description, &m.Year, &m.ReleaseDate, &m.Runtime, &m.Rating, &m.MPAARating)
-		if err != nil {
-			return nil, err
-		}
-		movies = append(movies, &m)
+	where := ""
+	if len(genreId) > 0 {
+		where = fmt.Sprintf("WHERE id IN (SELECT movie_id FROM movies_genres WHERE genre_id = %v)", genreId[0])
 	}
 
-	return movies, nil
-}
-
-func (repo *Repository) FindMovieAll() ([]*Movie, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	query := `SELECT id, title, description, year, release_date, runtime, rating, mpaa_rating
-			FROM movies ORDER BY title`
+	query := fmt.Sprintf(`SELECT id, title, description, year, release_date, runtime, rating, mpaa_rating
+			FROM movies %s ORDER BY title`, where)
 	rows, err := repo.DB.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err

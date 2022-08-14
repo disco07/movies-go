@@ -73,8 +73,14 @@ func (app apps) getAllGenres(w http.ResponseWriter, _ *http.Request) {
 
 func (app apps) getMovieByGenre(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
-	genre := params.ByName("genre")
-	movies, err := app.models.DB.FindMovieByGenre(genre)
+
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.logger.Print(errors.New("invalid id parameter"))
+		app.errorJSON(w, err)
+		return
+	}
+	movies, err := app.models.DB.FindMovieAll(id)
 	if err != nil {
 		app.errorJSON(w, err)
 		return
