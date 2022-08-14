@@ -26,11 +26,12 @@ type Movie struct {
 	MPAARating  string       `json:"mpaa_rating"`
 	CreatedAt   time.Time    `json:"created_at"`
 	UpdateAt    time.Time    `json:"update_at"`
-	MovieGenre  []MovieGenre `json:"-"`
+	MovieGenre  []MovieGenre `json:"movie_genre"`
 }
 
 type Genre struct {
 	ID        int       `json:"id"`
+	GenreName string    `json:"genre_name"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdateAt  time.Time `json:"update_at"`
 }
