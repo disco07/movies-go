@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func (app apps) getOneMovie(w http.ResponseWriter, r *http.Request) {
@@ -52,6 +53,8 @@ func (app apps) insertMovie(w http.ResponseWriter, r *http.Request) {
 		app.errorJSON(w, err)
 		return
 	}
+	movie.CreatedAt = time.Now()
+	movie.UpdateAt = time.Now()
 
 	err := app.models.DB.InsertMovie(movie)
 	if err != nil {
