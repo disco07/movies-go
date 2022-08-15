@@ -5,11 +5,15 @@ import (
 	"errors"
 	"github.com/julienschmidt/httprouter"
 	"github/disco07/movies-go/models"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
 )
+
+type jsResp struct {
+	OK      bool   `json:"ok"`
+	Message string `json:"message"`
+}
 
 func (app apps) getOneMovie(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
@@ -46,32 +50,77 @@ func (app apps) getAllMovies(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func (app apps) insertMovie(w http.ResponseWriter, r *http.Request) {
+func (app apps) insertOrUpdateMovie(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.logger.Print(errors.New("invalid id parameter"))
+		app.errorJSON(w, err)
+		return
+	}
+
 	defer r.Body.Close()
+
 	var movie models.Movie
 	if err := json.NewDecoder(r.Body).Decode(&movie); err != nil {
 		app.errorJSON(w, err)
 		return
 	}
-	movie.CreatedAt = time.Now()
-	movie.UpdateAt = time.Now()
 
-	err := app.models.DB.InsertMovie(movie)
-	if err != nil {
-		log.Fatal(err)
-		app.errorJSON(w, err)
-		return
+	if id == 0 {
+		movie.CreatedAt = time.Now()
+		movie.UpdateAt = time.Now()
+
+		err = app.models.DB.InsertMovie(movie)
+		if err != nil {
+			app.errorJSON(w, err)
+			return
+		}
+
+		ok := jsResp{true, "movie successfully added"}
+		err = app.writeJSON(w, http.StatusCreated, ok, "response")
+		if err != nil {
+			app.errorJSON(w, err)
+			return
+		}
+	} else {
+		movie.ID = id
+		movie.UpdateAt = time.Now()
+		err = app.models.DB.UpdateMovie(movie)
+		if err != nil {
+			app.errorJSON(w, err)
+			return
+		}
+
+		ok := jsResp{true, "movie successfully updated"}
+		err = app.writeJSON(w, http.StatusCreated, ok, "response")
+		if err != nil {
+			app.errorJSON(w, err)
+			return
+		}
 	}
-	w.WriteHeader(http.StatusCreated)
-
-}
-
-func (app apps) updateMovie(w http.ResponseWriter, r *http.Request) {
 
 }
 
 func (app apps) deleteMovie(w http.ResponseWriter, r *http.Request) {
-
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.logger.Print(errors.New("invalid id parameter"))
+		app.errorJSON(w, err)
+		return
+	}
+	err = app.models.DB.DeleteMovie(id)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+	ok := jsResp{true, "movie successfully updated"}
+	err = app.writeJSON(w, http.StatusCreated, ok, "response")
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
 }
 
 func (app apps) searchMovie(w http.ResponseWriter, r *http.Request) {

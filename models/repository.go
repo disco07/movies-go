@@ -134,16 +134,65 @@ func (repo *Repository) InsertMovie(m Movie) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `INSERT INTO movies(title, description, year, release_date, runtime, rating, mpaa_rating, created_at, updated_at) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+	query := `INSERT INTO movies(title, description, year, release_date, runtime, rating, mpaa_rating, created_at, updated_at) 
+			VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)`
 	stmt, err := repo.DB.PrepareContext(ctx, query)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	_, err = repo.DB.ExecContext(ctx, query, m.Title, m.Description, m.Year, m.ReleaseDate, m.Runtime, m.Rating, m.MPAARating, m.CreatedAt, m.UpdateAt)
+	_, err = repo.DB.ExecContext(ctx, query,
+		m.Title,
+		m.Description,
+		m.Year,
+		m.ReleaseDate,
+		m.Runtime,
+		m.Rating,
+		m.MPAARating,
+		m.CreatedAt,
+		m.UpdateAt)
 	if err != nil {
 		log.Fatal(err)
+		return err
+	}
+
+	return nil
+}
+
+func (repo *Repository) UpdateMovie(m Movie) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `UPDATE movies SET title = $1, description = $2, year = $3, release_date = $4, runtime = $5, 
+            rating = $6, mpaa_rating = $7, updated_at = $8 WHERE id = $9`
+
+	_, err := repo.DB.ExecContext(ctx, query,
+		m.Title,
+		m.Description,
+		m.Year,
+		m.ReleaseDate,
+		m.Runtime,
+		m.Rating,
+		m.MPAARating,
+		m.UpdateAt,
+		m.ID,
+	)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	return nil
+}
+
+func (repo Repository) DeleteMovie(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `DELETE FROM movies WHERE id = $1`
+	_, err := repo.DB.ExecContext(ctx, query, id)
+	if err != nil {
 		return err
 	}
 
